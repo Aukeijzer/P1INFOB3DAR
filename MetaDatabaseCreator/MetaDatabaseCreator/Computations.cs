@@ -14,14 +14,40 @@ namespace MetaDatabaseCreator
     {
 
         /// <summary>
-        /// Calculates IDF
+        /// Calculates IDF for categorical Data
         /// </summary>
         /// <param name="tuples"></param>
         /// <param name="frequency"></param>
         /// <returns></returns>
-        public double IDF(int tuples, int frequency)
+        public double IDFCategorical(int tuples, int frequency)
         {
             return Math.Log(tuples / frequency);
+        }
+
+        public double IDFNumerical(int tuples, double value, List<double> AttributeValues)
+        {
+            int valueTotal = AttributeValues.Count;
+            double standardDev = StandardDeviation(AttributeValues);
+            double bandwidth = CalculateBandwidth(standardDev, valueTotal);
+
+            double denominator = 0;
+            foreach(double values in AttributeValues)
+            {
+                denominator += Math.Pow(Math.E, (-1 / 2) * Math.Pow(((values - value) / bandwidth), 2));
+            }
+
+            return Math.Log(tuples / denominator);
+        }
+
+        public static double StandardDeviation(List<double> values)
+        {
+            double average = values.Average();
+            return Math.Sqrt(values.Average(x => Math.Pow(x - average, 2)));
+        }
+
+        public double CalculateBandwidth(double StandardDeviation, int valueTotal)
+        {
+            return 1.06 * StandardDeviation * Math.Pow(valueTotal, -1 / 5);
         }
 
         /// <summary>
@@ -38,8 +64,8 @@ namespace MetaDatabaseCreator
         /// <summary>
         /// Calculates Jacquard Coefficient
         /// </summary>
-        /// <param name="query1"></param>
-        /// <param name="query2"></param>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
         /// <returns></returns>
         public float Jacquard(List<string> value1, List<string> value2)
         {
