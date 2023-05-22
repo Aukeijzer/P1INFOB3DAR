@@ -28,6 +28,10 @@ namespace MetaDatabaseCreator
             Console.ReadKey();
         }
 
+        // Categorical Data: Brand, Model, Type
+        // Numerical Data: mpg, cylinders, displacement, horsepower, weight, acceleration, model_year, origin
+
+        // Possible choice to make cylinders and origin Categorical?
 
         private static void CreateDatabase(SQLiteConnection m_dbConnection)
         {
