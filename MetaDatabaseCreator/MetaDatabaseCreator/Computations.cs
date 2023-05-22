@@ -10,7 +10,7 @@ namespace MetaDatabaseCreator
     /// Class that performs computations for the metadatabase
     /// Computes certain values such as IDF, QF and Jacquard Coefficient
     /// </summary>
-    internal class Computations
+    public class Computations
     {
 
         /// <summary>
