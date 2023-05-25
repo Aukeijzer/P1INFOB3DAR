@@ -1,0 +1,17 @@
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\QueryProcessor.exe.config
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\QueryProcessor.exe
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\QueryProcessor.pdb
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\EntityFramework.dll
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\EntityFramework.SqlServer.dll
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\System.Data.SQLite.dll
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\System.Data.SQLite.EF6.dll
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\System.Data.SQLite.Linq.dll
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\EntityFramework.xml
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\EntityFramework.SqlServer.xml
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\bin\Debug\System.Data.SQLite.xml
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\obj\Debug\QueryProcessor.csproj.AssemblyReference.cache
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\obj\Debug\QueryProcessor.csproj.SuggestedBindingRedirects.cache
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\obj\Debug\QueryProcessor.csproj.CoreCompileInputs.cache
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\obj\Debug\QueryProcessor.csproj.CopyComplete
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\obj\Debug\QueryProcessor.exe
+D:\GitHub\P1INFOB3DAR\QueryProcessor\QueryProcessor\obj\Debug\QueryProcessor.pdb
