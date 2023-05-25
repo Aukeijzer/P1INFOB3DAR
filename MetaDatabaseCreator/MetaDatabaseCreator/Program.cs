@@ -11,12 +11,6 @@ namespace MetaDatabaseCreator
 {
     internal class Program
     {
-        static Dictionary<string, int> model_year = new Dictionary<string, int>();
-        static Dictionary<string, int> origin = new Dictionary<string, int>();
-        static Dictionary<string, int> brand = new Dictionary<string, int>();
-        static Dictionary<string, int> model = new Dictionary<string, int>();
-        static Dictionary<string, int> type = new Dictionary<string, int>();
-
         /*
          * Categorical Data: model_year, origin, Brand, Model, Type
          * Numerical Data: mpg, cylinders, displacement, horsepower, weight, acceleration
@@ -35,7 +29,18 @@ namespace MetaDatabaseCreator
          * 11: type text
          */
 
-        // Possible choice to make cylinders and origin Categorical?
+        // Categorical Data
+        static Dictionary<string, TableTuple> cylinders = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> model_year = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> origin = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> brand = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> model = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> type = new Dictionary<string, TableTuple>();
+        // End - Categorical Data
+
+        // Numerical Data
+
+        // End - Numerical Data
 
         static void Main(string[] args)
         {
@@ -52,11 +57,13 @@ namespace MetaDatabaseCreator
 
             m_dbConnection.Close();
 
+            ReadWorkload();
+            //DebugReadDictionary(cylinders);
             //DebugReadDictionary(model_year);
             //DebugReadDictionary(origin);
             //DebugReadDictionary(brand);
             //DebugReadDictionary(model);
-            //DebugReadDictionary(type);
+            DebugReadDictionary(type);
 
             Console.ReadKey();
         }
@@ -76,6 +83,7 @@ namespace MetaDatabaseCreator
 
             while (reader.Read())
             {
+                FillDictionary(cylinders, reader[2].ToString());
                 FillDictionary(model_year, reader[7].ToString());
                 FillDictionary(origin, reader[8].ToString());
                 FillDictionary(brand, reader[9].ToString());
@@ -85,16 +93,137 @@ namespace MetaDatabaseCreator
 
         }
 
-        private static void FillDictionary(Dictionary<string, int> attribute, string value)
+        /// <summary>
+        /// Create new tuples for attribute values and counts the Term Frequency
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <param name="value"></param>
+        private static void FillDictionary(Dictionary<string, TableTuple> attribute, string value)
         {
             if(attribute.ContainsKey(value))
             {
-                attribute[value]++;
+                attribute[value].IncreaseTF();
             }
             else
             {
-                attribute.Add(value, 1);
+                attribute.Add(value, new TableTuple());
             }
+        }
+
+        private static void ReadWorkload()
+        {
+            string file = "..\\..\\Database\\workload.txt";
+
+            IEnumerable<string> lines = File.ReadLines(file);
+
+            int workloadID = 0;
+
+            foreach (string line in lines.Skip(2))
+            {
+                if (String.IsNullOrEmpty(line)) break;
+
+                int qfIndex = line.IndexOf("times");
+                int qf = Int32.Parse(line.Substring(0, qfIndex - 1));
+
+                int index = line.IndexOf("WHERE");
+                string ceq = line.Substring(index + 6);
+                string[] seperator = new string[] {" AND "};
+
+                string[] queries = ceq.Split(seperator, StringSplitOptions.None);
+
+                foreach(string subquery in queries)
+                {
+                    if (subquery.Contains(" IN "))
+                    {
+                        AddToSimilarity(workloadID, subquery);
+                    }
+                    else
+                    {
+                        AddToQueryFrequency(qf, subquery);
+                    }
+
+                }
+                workloadID++;
+            }
+
+        }
+
+        /// <summary>
+        /// Adds the query frequency amount to a certain value
+        /// </summary>
+        /// <param name="qf"></param>
+        /// <param name="query"></param>
+        private static void AddToQueryFrequency(int qf, string query)
+        {
+            string[] seperator2 = new string[] { " = " };
+            string[] equalityQuery = query.Split(seperator2, StringSplitOptions.None);
+            string attribute = equalityQuery[0];
+            string value = equalityQuery[1].Trim('\'');
+
+            switch (attribute)
+            {
+                case "cylinders":
+                    FillDictionaryQF(cylinders, value, qf);
+                    break;
+                case "model_year":
+                    FillDictionaryQF(model_year, value, qf);
+                    break;
+                case "origin":
+                    FillDictionaryQF(origin, value, qf);
+                    break;
+                case "brand":
+                    FillDictionaryQF(brand, value, qf);
+                    break;
+                case "model":
+                    FillDictionaryQF(model, value, qf);
+                    break;
+                case "type":
+                    FillDictionaryQF(type, value, qf);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Fills QF value if key exists in dictionary
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <param name="value"></param>
+        /// <param name="qf"></param>
+        private static void FillDictionaryQF(Dictionary<string, TableTuple> attribute, string value, int qf)
+        {
+            if (attribute.ContainsKey(value))
+            {
+                attribute[value].IncreaseQF(qf);
+            }
+        }
+
+        /// <summary>
+        /// Adds an ID to brand values if they are contained in a "brand IN" query
+        /// </summary>
+        /// <param name="workloadID"></param>
+        /// <param name="query"></param>
+        private static void AddToSimilarity(int workloadID, string query)
+        {   
+            int index = query.IndexOf("IN");
+            string[] subqueries = query.Substring(index + 4).Split(')')[0].Split(',');
+
+            if (query.Contains("brand"))
+            {
+                foreach (string brandQuery in subqueries)
+                {
+                    brand[brandQuery.Trim('\'')].AddToSet(workloadID);
+                }
+            }
+            else if(query.Contains("type"))
+            {
+                foreach (string typeQuery in subqueries)
+                {
+                    type[typeQuery.Trim('\'')].AddToSet(workloadID);
+                }
+            }
+            
         }
 
         #region Debug Methods
@@ -122,9 +251,9 @@ namespace MetaDatabaseCreator
 
         }
 
-        private static void DebugReadDictionary(Dictionary<string, int> attribute)
+        private static void DebugReadDictionary(Dictionary<string, TableTuple> attribute)
         {
-            foreach(KeyValuePair<string, int> value in attribute)
+            foreach(KeyValuePair<string, TableTuple> value in attribute)
             {
                 Console.WriteLine(value.ToString());
             }
