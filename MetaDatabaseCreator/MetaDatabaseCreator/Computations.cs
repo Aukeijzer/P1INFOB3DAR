@@ -19,16 +19,15 @@ namespace MetaDatabaseCreator
         /// <param name="tuples"></param>
         /// <param name="frequency"></param>
         /// <returns></returns>
-        public double IDFCategorical(int tuples, int frequency)
+        public double IDFCategorical(double tuples, double frequency)
         {
             return Math.Log(tuples / frequency);
         }
 
-        public double IDFNumerical(int tuples, double value, List<double> AttributeValues)
+        public double IDFNumerical(double tuples, double value, List<double> AttributeValues)
         {
-            int valueTotal = AttributeValues.Count;
             double standardDev = StandardDeviation(AttributeValues);
-            double bandwidth = CalculateBandwidth(standardDev, valueTotal);
+            double bandwidth = CalculateBandwidth(standardDev, tuples);
 
             double denominator = 0;
             foreach(double values in AttributeValues)
@@ -45,7 +44,7 @@ namespace MetaDatabaseCreator
             return Math.Sqrt(values.Average(x => Math.Pow(x - average, 2)));
         }
 
-        public double CalculateBandwidth(double StandardDeviation, int valueTotal)
+        public double CalculateBandwidth(double StandardDeviation, double valueTotal)
         {
             return 1.06 * StandardDeviation * Math.Pow(valueTotal, -1 / 5);
         }
@@ -56,7 +55,7 @@ namespace MetaDatabaseCreator
         /// <param name="rqfValue"></param>
         /// <param name="rqfMax"></param>
         /// <returns></returns>
-        public double QF(int rqfValue, int rqfMax)
+        public double QF(double rqfValue, double rqfMax)
         {
             return rqfValue / rqfMax;
         }

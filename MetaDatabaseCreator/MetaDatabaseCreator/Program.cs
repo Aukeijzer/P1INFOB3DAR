@@ -39,8 +39,15 @@ namespace MetaDatabaseCreator
         // End - Categorical Data
 
         // Numerical Data
-
+        static Dictionary<string, TableTuple> mpg = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> displacement = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> horsepower = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> weight = new Dictionary<string, TableTuple>();
+        static Dictionary<string, TableTuple> acceleration = new Dictionary<string, TableTuple>();
         // End - Numerical Data
+
+        static Computations Comp = new Computations();
+        static int totalTuples = 0;
 
         static void Main(string[] args)
         {
@@ -58,12 +65,11 @@ namespace MetaDatabaseCreator
             m_dbConnection.Close();
 
             ReadWorkload();
-            //DebugReadDictionary(cylinders);
-            //DebugReadDictionary(model_year);
-            //DebugReadDictionary(origin);
-            //DebugReadDictionary(brand);
-            //DebugReadDictionary(model);
-            DebugReadDictionary(type);
+
+            DebugReadDictionary(mpg);
+
+            InsertValue(mpg, "mpg", false);
+            InsertValue(type, "type", true);
 
             Console.ReadKey();
         }
@@ -83,12 +89,18 @@ namespace MetaDatabaseCreator
 
             while (reader.Read())
             {
+                FillDictionary(mpg, reader[1].ToString());
                 FillDictionary(cylinders, reader[2].ToString());
+                FillDictionary(displacement, reader[3].ToString());
+                FillDictionary(horsepower, reader[4].ToString());
+                FillDictionary(weight, reader[5].ToString());
+                FillDictionary(acceleration, reader[6].ToString());
                 FillDictionary(model_year, reader[7].ToString());
                 FillDictionary(origin, reader[8].ToString());
                 FillDictionary(brand, reader[9].ToString());
                 FillDictionary(model, reader[10].ToString());
                 FillDictionary(type, reader[11].ToString());
+                totalTuples++;
             }
 
         }
@@ -162,8 +174,20 @@ namespace MetaDatabaseCreator
 
             switch (attribute)
             {
+                case "mpg":
+                    FillDictionaryQF(mpg, value, qf);
+                    break;
                 case "cylinders":
                     FillDictionaryQF(cylinders, value, qf);
+                    break;
+                case "horsepower":
+                    FillDictionaryQF(horsepower, value, qf);
+                    break;
+                case "weight":
+                    FillDictionaryQF(weight, value, qf);
+                    break;
+                case "acceleration":
+                    FillDictionaryQF(acceleration, value, qf);
                     break;
                 case "model_year":
                     FillDictionaryQF(model_year, value, qf);
@@ -195,7 +219,7 @@ namespace MetaDatabaseCreator
         {
             if (attribute.ContainsKey(value))
             {
-                attribute[value].IncreaseQF(qf);
+                attribute[value].IncreaseRQF(qf);
             }
         }
 
@@ -224,6 +248,67 @@ namespace MetaDatabaseCreator
                 }
             }
             
+        }
+
+        private static void InsertValue(Dictionary<string, TableTuple> attribute, string name, bool categorical)
+        {
+            List<double> attributeValues = new List<double>();
+            if (!categorical)
+            {
+                foreach(KeyValuePair<string, TableTuple> tuple in attribute)
+                {
+                    for(int i = 0; i < tuple.Value.TermFrequency; i++)
+                    {
+                        attributeValues.Add(Double.Parse(tuple.Key));
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<string, TableTuple> tuple in attribute)
+            {
+                TableTuple data = tuple.Value;
+                double IDF = 0;
+                double QF = 0;
+                // INSERT INTO autompg VALUES (1, 18, 8, 307, 130, 3504, 12, 70, 1, 'chevrolet', 'chevelle malibu', 'sedan');
+                string insert = "";
+
+                if (categorical)
+                {
+                    IDF = Comp.IDFCategorical(totalTuples, data.TermFrequency);
+                    string set = CreateSimilaritySetString(data);
+
+                    insert = string.Format("INSERT INTO categorical_metadata VALUES ('{0}', {1}, {2}, {3}, " 
+                        + set + ")", name, tuple.Key, IDF, QF);
+                }
+                else
+                {
+                    IDF = Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues);
+
+                    insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3})", name, tuple.Key, IDF, QF);
+                }
+
+                
+                Console.WriteLine(insert);
+            }
+        }
+
+        private static string CreateSimilaritySetString(TableTuple data)
+        {
+            string set = "(";
+            for (int i = 0; i < data.SimilaritySet.Count; i++)
+            {
+                // do something with each item
+                if ((i + 1) == data.SimilaritySet.Count)
+                {
+                    set += i;
+                }
+                else
+                {
+                    set += i + ", ";
+                }
+            }
+            set += ")";
+            return set;
         }
 
         #region Debug Methods

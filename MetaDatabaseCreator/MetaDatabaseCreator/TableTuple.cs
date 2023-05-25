@@ -9,12 +9,12 @@ namespace MetaDatabaseCreator
     public class TableTuple
     {
         public int TermFrequency;
-        public int QueryFrequency;
+        public int RawQueryFrequency;
         public List<int> SimilaritySet;
         public TableTuple()
         {
             this.TermFrequency = 1;
-            this.QueryFrequency = 0;
+            this.RawQueryFrequency = 0;
             SimilaritySet = new List<int>();
         }
 
@@ -23,9 +23,9 @@ namespace MetaDatabaseCreator
             this.TermFrequency++;
         }
 
-        public void IncreaseQF(int QF)
+        public void IncreaseRQF(int QF)
         {
-            this.QueryFrequency += QF;
+            this.RawQueryFrequency += QF;
         }
 
         public void AddToSet(int query)
@@ -35,7 +35,7 @@ namespace MetaDatabaseCreator
 
         public override string ToString()
         {
-            string TFQF = String.Format("TF: {0}, QF: {1}, Set: (", TermFrequency, QueryFrequency);
+            string TFQF = String.Format("TF: {0}, QF: {1}, Set: (", TermFrequency, RawQueryFrequency);
             foreach(int i in SimilaritySet)
             {
                 TFQF += i.ToString() + ", ";
