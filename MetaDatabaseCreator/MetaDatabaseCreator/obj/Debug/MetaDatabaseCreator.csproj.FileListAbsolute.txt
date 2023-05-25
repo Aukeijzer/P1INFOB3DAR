@@ -1,0 +1,17 @@
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\MetaDatabaseCreator.exe.config
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\MetaDatabaseCreator.exe
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\MetaDatabaseCreator.pdb
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\EntityFramework.dll
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\System.Data.SQLite.dll
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\System.Data.SQLite.EF6.dll
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\System.Data.SQLite.Linq.dll
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\EntityFramework.xml
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\bin\Debug\System.Data.SQLite.xml
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\obj\Debug\MetaDatabaseCreator.csproj.AssemblyReference.cache
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\obj\Debug\MetaDatabaseCreator.csproj.SuggestedBindingRedirects.cache
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\obj\Debug\MetaDatabaseCreator.csproj.CoreCompileInputs.cache
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\obj\Debug\MetaDatabaseCreator.csproj.CopyComplete
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\obj\Debug\MetaDatabaseCreator.exe
+C:\Users\Mikey Lam\Documents\UniDocs\DataAnalyse\Practicum1\MetaDatabaseCreator\MetaDatabaseCreator\obj\Debug\MetaDatabaseCreator.pdb
