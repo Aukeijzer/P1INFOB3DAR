@@ -32,7 +32,11 @@ namespace MetaDatabaseCreator
             double denominator = 0;
             foreach(double values in AttributeValues)
             {
-                denominator += Math.Pow(Math.E, (-1 / 2) * Math.Pow(((values - value) / bandwidth), 2));
+                double value1 = ((values - value) / bandwidth);
+                double value2 = Math.Pow(value1, 2);
+                double value3 = -0.5 * value2;
+                double value4 = Math.Pow(Math.E, value3);
+                denominator += value4;
             }
 
             return Math.Log(tuples / denominator);

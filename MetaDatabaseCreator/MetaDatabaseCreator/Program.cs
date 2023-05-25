@@ -268,8 +268,7 @@ namespace MetaDatabaseCreator
             {
                 TableTuple data = tuple.Value;
                 double IDF = 0;
-                double QF = 0;
-                // INSERT INTO autompg VALUES (1, 18, 8, 307, 130, 3504, 12, 70, 1, 'chevrolet', 'chevelle malibu', 'sedan');
+                double QF = 0; // Calculate QF!
                 string insert = "";
 
                 if (categorical)
