@@ -12,8 +12,8 @@ namespace MetaDatabaseCreator
     internal class Program
     {
         /*
-         * Categorical Data: model_year, origin, Brand, Model, Type
-         * Numerical Data: mpg, cylinders, displacement, horsepower, weight, acceleration
+         * Categorical Data: cylinders, model_year, origin, Brand, Model, Type
+         * Numerical Data: mpg, displacement, horsepower, weight, acceleration
          * Order of columns
          * 0:  id integer NOT NULL,
          * 1:  mpg real,
@@ -51,7 +51,7 @@ namespace MetaDatabaseCreator
 
         static void Main(string[] args)
         {
-           
+            //Create database file for autompg
             SQLiteConnection.CreateFile("Cars.sqlite");
 
             string connectionString = "Data Source=Cars.sqlite;Version=3;";
@@ -59,20 +59,23 @@ namespace MetaDatabaseCreator
 
             m_dbConnection.Open();
 
+            //Create database and read data for dictionaries, mainly TF
             CreateDatabase(m_dbConnection);
             ReadDatabase(m_dbConnection);
 
             m_dbConnection.Close();
 
+            //Fill dictionaries with more data regarding RQF and similarity sets
             ReadWorkload();
 
-            DebugReadDictionary(mpg);
+            //Create all INSERT statements for workload.txt
+            InsertAllDictionaries();
 
-            InsertValue(mpg, "mpg", false);
-            InsertValue(type, "type", true);
-
+            Console.WriteLine("Preprocessing finished!");
             Console.ReadKey();
         }
+
+        #region Data Reading Methods
 
         private static void CreateDatabase(SQLiteConnection m_dbConnection)
         {
@@ -106,22 +109,8 @@ namespace MetaDatabaseCreator
         }
 
         /// <summary>
-        /// Create new tuples for attribute values and counts the Term Frequency
+        /// Read the workload file and fill data in the dictionaries
         /// </summary>
-        /// <param name="attribute"></param>
-        /// <param name="value"></param>
-        private static void FillDictionary(Dictionary<string, TableTuple> attribute, string value)
-        {
-            if(attribute.ContainsKey(value))
-            {
-                attribute[value].IncreaseTF();
-            }
-            else
-            {
-                attribute.Add(value, new TableTuple());
-            }
-        }
-
         private static void ReadWorkload()
         {
             string file = "..\\..\\Database\\workload.txt";
@@ -160,6 +149,42 @@ namespace MetaDatabaseCreator
 
         }
 
+        #endregion 
+
+        #region Data Modifying Methods
+
+        /// <summary>
+        /// Create new tuples for attribute values and counts the Term Frequency
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <param name="value"></param>
+        private static void FillDictionary(Dictionary<string, TableTuple> attribute, string value)
+        {
+            if (attribute.ContainsKey(value))
+            {
+                attribute[value].IncreaseTF();
+            }
+            else
+            {
+                attribute.Add(value, new TableTuple());
+            }
+        }
+
+        /// <summary>
+        /// Fills QF value if key exists in dictionary
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <param name="value"></param>
+        /// <param name="rqf"></param>
+        private static void FillDictionaryRQF(Dictionary<string, TableTuple> attribute, string value, int rqf)
+        {
+            if (attribute.ContainsKey(value))
+            {
+                attribute[value].IncreaseRQF(rqf);
+            }
+        }
+
+
         /// <summary>
         /// Adds the query frequency amount to a certain value
         /// </summary>
@@ -175,51 +200,37 @@ namespace MetaDatabaseCreator
             switch (attribute)
             {
                 case "mpg":
-                    FillDictionaryQF(mpg, value, qf);
+                    FillDictionaryRQF(mpg, value, qf);
                     break;
                 case "cylinders":
-                    FillDictionaryQF(cylinders, value, qf);
+                    FillDictionaryRQF(cylinders, value, qf);
                     break;
                 case "horsepower":
-                    FillDictionaryQF(horsepower, value, qf);
+                    FillDictionaryRQF(horsepower, value, qf);
                     break;
                 case "weight":
-                    FillDictionaryQF(weight, value, qf);
+                    FillDictionaryRQF(weight, value, qf);
                     break;
                 case "acceleration":
-                    FillDictionaryQF(acceleration, value, qf);
+                    FillDictionaryRQF(acceleration, value, qf);
                     break;
                 case "model_year":
-                    FillDictionaryQF(model_year, value, qf);
+                    FillDictionaryRQF(model_year, value, qf);
                     break;
                 case "origin":
-                    FillDictionaryQF(origin, value, qf);
+                    FillDictionaryRQF(origin, value, qf);
                     break;
                 case "brand":
-                    FillDictionaryQF(brand, value, qf);
+                    FillDictionaryRQF(brand, value, qf);
                     break;
                 case "model":
-                    FillDictionaryQF(model, value, qf);
+                    FillDictionaryRQF(model, value, qf);
                     break;
                 case "type":
-                    FillDictionaryQF(type, value, qf);
+                    FillDictionaryRQF(type, value, qf);
                     break;
                 default:
                     break;
-            }
-        }
-
-        /// <summary>
-        /// Fills QF value if key exists in dictionary
-        /// </summary>
-        /// <param name="attribute"></param>
-        /// <param name="value"></param>
-        /// <param name="qf"></param>
-        private static void FillDictionaryQF(Dictionary<string, TableTuple> attribute, string value, int qf)
-        {
-            if (attribute.ContainsKey(value))
-            {
-                attribute[value].IncreaseRQF(qf);
             }
         }
 
@@ -250,47 +261,98 @@ namespace MetaDatabaseCreator
             
         }
 
+        #endregion
+
+        #region Data Exporting Methods
+
+        /// <summary>
+        /// Resets the metaload file (if it exists)
+        /// Create for every dictionary INSERT statements and inject them into metaload.txt
+        /// </summary>
+        private static void InsertAllDictionaries()
+        {
+            string filePath = "..\\..\\Database\\metaload.txt";
+            try
+            {
+                File.Delete(filePath);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+
+            InsertValue(mpg, "mpg", false);
+            InsertValue(cylinders, "cylinders", true);
+            InsertValue(displacement, "displacement", false);
+            InsertValue(horsepower, "horsepower", false);
+            InsertValue(weight, "weight", false);
+            InsertValue(acceleration, "acceleration", false);
+            InsertValue(model_year, "model_year", true);
+            InsertValue(origin, "origin", true);
+            InsertValue(brand, "brand", true);
+            InsertValue(model, "model", true);
+            InsertValue(type, "type", true);
+        }
+
+        /// <summary>
+        /// Create an INSERT statement string and insert into workload.txt
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <param name="name"></param>
+        /// <param name="categorical"></param>
         private static void InsertValue(Dictionary<string, TableTuple> attribute, string name, bool categorical)
         {
             List<double> attributeValues = new List<double>();
-            if (!categorical)
+            List<int> RQFList = new List<int>();
+            
+            foreach(KeyValuePair<string, TableTuple> tuple in attribute)
             {
-                foreach(KeyValuePair<string, TableTuple> tuple in attribute)
+                for(int i = 0; i < tuple.Value.TermFrequency; i++)
                 {
-                    for(int i = 0; i < tuple.Value.TermFrequency; i++)
-                    {
+                    RQFList.Add(tuple.Value.RawQueryFrequency);
+                    if(!categorical)
                         attributeValues.Add(Double.Parse(tuple.Key));
-                    }
                 }
             }
 
-            foreach (KeyValuePair<string, TableTuple> tuple in attribute)
+            int RQFMax = RQFList.Max();
+            string filePath = "..\\..\\Database\\metaload.txt";
+
+            using (StreamWriter writer = new StreamWriter(filePath, true))
             {
-                TableTuple data = tuple.Value;
-                double IDF = 0;
-                double QF = 0; // Calculate QF!
-                string insert = "";
-
-                if (categorical)
+                foreach (KeyValuePair<string, TableTuple> tuple in attribute)
                 {
-                    IDF = Comp.IDFCategorical(totalTuples, data.TermFrequency);
-                    string set = CreateSimilaritySetString(data);
+                    TableTuple data = tuple.Value;
+                    double IDF = 0;
+                    double QF = Comp.QF(data.RawQueryFrequency, RQFMax);
+                    string insert = "";
 
-                    insert = string.Format("INSERT INTO categorical_metadata VALUES ('{0}', {1}, {2}, {3}, " 
-                        + set + ")", name, tuple.Key, IDF, QF);
+                    if (categorical)
+                    {
+                        IDF = Comp.IDFCategorical(totalTuples, data.TermFrequency);
+                        string set = CreateSimilaritySetString(data);
+
+                        insert = string.Format("INSERT INTO categorical_metadata VALUES ('{0}', {1}, {2}, {3}, "
+                            + set + ")", name, tuple.Key, IDF, QF);
+                    }
+                    else
+                    {
+                        IDF = Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues);
+
+                        insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3})", name, tuple.Key, IDF, QF);
+                    }
+
+
+                    writer.WriteLine(insert);
                 }
-                else
-                {
-                    IDF = Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues);
-
-                    insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3})", name, tuple.Key, IDF, QF);
-                }
-
-                
-                Console.WriteLine(insert);
             }
         }
 
+        /// <summary>
+        /// Creates string for the Similarity Set
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         private static string CreateSimilaritySetString(TableTuple data)
         {
             string set = "(";
@@ -309,6 +371,8 @@ namespace MetaDatabaseCreator
             set += ")";
             return set;
         }
+
+        #endregion
 
         #region Debug Methods
         private static void DebugReadDatabase(SQLiteConnection m_dbConnection)
