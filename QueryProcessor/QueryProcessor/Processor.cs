@@ -32,10 +32,10 @@ namespace QueryProcessor
             meta_dbConnection.Open();
             
             n = (int) calcN();
-            scores = new (double, int)[n];
-            for(int i = 0;i<n;i++)
-                scores[i] = (0, i+1);
-
+            scores = new (double, int)[n + 10];
+            for(int i = 0;i<scores.Length;i++)
+                scores[i] = (0, i);
+            List<QueryType> queries = new List<QueryType>();
             //For each predicate in the list of predicates update the scores
             foreach (var predicate in predicates)
             {
@@ -45,9 +45,15 @@ namespace QueryProcessor
                 //categorical
                 else
                     UpdateCategoricalScores(predicate);
+                
+                queries.Add(predicate.Query);
             }
             //For each attribute not in the list of predicates update the scores
-            
+            for (int i = 1; i < 12; i++)
+            {
+                if(!queries.Contains((QueryType)i))
+                    UpdateQFScores((QueryType)i);
+            }
             //Sort scores ascending
             Array.Sort(scores);
             
@@ -62,9 +68,44 @@ namespace QueryProcessor
             return result;
         }
 
+        private void UpdateQFScores(QueryType queryType)
+        {
+            string attribute = Predicate.Type2String(queryType);
+            string sql = $"SELECT id,{attribute} FROM autompg";
+            SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
+            SQLiteDataReader reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                long id = (long) reader["id"];
+                string value, table;
+                if (Predicate.IsNumerical(queryType))
+                {
+                    table = "numerical_metadata";
+                    value = ((double) reader[attribute]).ToString();
+                    value = value.Replace(',', '.');
+                }
+                else
+                {
+                    table = "categorical_metadata";
+                    if (queryType >= QueryType.Brand)
+                        value = (string)reader[attribute];
+                    else value = ((long) reader[attribute]).ToString();
+                    value = $"\"{value}\"";
+                }
+
+                
+                string sql2 = $"SELECT qf FROM {table} WHERE attribute = \"{attribute}\" AND value = {value}";
+                SQLiteCommand command2 = new SQLiteCommand(sql2, meta_dbConnection);
+                SQLiteDataReader reader2 = command2.ExecuteReader();
+                reader2.Read();
+                double qf = (double) reader2["qf"];
+                scores[id].Item1 += Math.Log(qf);
+            }
+        }
+
         private string lookupID(int id)
         {
-            string sql = "SELECT * FROM autompg WHERE id = " + id;
+            string sql = $"SELECT * FROM autompg WHERE id = {id}";
             SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
             reader.Read();
@@ -77,7 +118,7 @@ namespace QueryProcessor
 
         private double CalcIdf(Predicate predicate, double h)
         {
-            string type = Type2String(predicate.Query);
+            string type = Predicate.Type2String(predicate.Query);
             double value = double.Parse(predicate.Value);
             
             string sql = $"SELECT {type} FROM autompg";
@@ -92,7 +133,7 @@ namespace QueryProcessor
             return Math.Log(n / sum);
         }
 
-        public double calcGuassian(double mean, double value, double h)
+        private double calcGuassian(double mean, double value, double h)
         {
             double exponent = -0.5 * Math.Pow((value - mean) / h, 2);
             return Math.Pow(Math.E, exponent);
@@ -106,7 +147,7 @@ namespace QueryProcessor
             bool test = reader.Read();
             return (long)reader[0];
         }
-        public double lookUpH(Predicate predicate)
+        private double lookUpH(Predicate predicate)
         {
             string sql = $"SELECT h FROM numerical_metadata where value = {predicate.Value}";
             SQLiteCommand command = new SQLiteCommand(sql, meta_dbConnection);
@@ -117,7 +158,7 @@ namespace QueryProcessor
 
         private void UpdateNumericalScores(Predicate predicate)
         {
-            string type = Type2String(predicate.Query);
+            string type = Predicate.Type2String(predicate.Query);
             double h = lookUpH(predicate);
             double idf = CalcIdf(predicate,h);
             double value = double.Parse(predicate.Value);
@@ -126,18 +167,18 @@ namespace QueryProcessor
             SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
             
-            for (int i = 0; i < scores.Length; i++)
+            while (reader.Read())
             {
-                reader.Read();
+                long id = (long)reader["id"];
                 double entry = (double)reader[type];
-                scores[i].Item1 += idf * calcGuassian(value, entry, h);
+                scores[id].Item1 += idf * calcGuassian(value, entry, h);
             }
         }
 
         private (double,double) lookUpIdfQf(Predicate predicate)
         {
             string sql = $"SELECT idf,qf FROM categorical_metadata " +
-                         $"WHERE attribute = \"{Type2String(predicate.Query)}\" " +
+                         $"WHERE attribute = \"{Predicate.Type2String(predicate.Query)}\" " +
                          $"AND value = \"{predicate.Value}\"";
             SQLiteCommand command = new SQLiteCommand(sql, meta_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
@@ -152,7 +193,7 @@ namespace QueryProcessor
         }
         private void UpdateCategoricalScores(Predicate predicate)
         {
-            string type = Type2String(predicate.Query);
+            string type = Predicate.Type2String(predicate.Query);
             (double idf, double qf) = lookUpIdfQf(predicate);
             string value = predicate.Value;
             
@@ -160,50 +201,12 @@ namespace QueryProcessor
             SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
             
-            for (int i = 0; i < scores.Length; i++)
+            while(reader.Read())
             {
-                reader.Read();
                 string entry = reader[type].ToString();
                 long id = (long)reader["id"];
                 if (entry == value)
-                    scores[id-1].Item1 += idf * qf;
-            }
-        }
-        private double calculateSimilarity(string query, string entry, double idf, double qf)
-        {
-            if (query!=entry)
-                return 0;
-            else
-                return idf * qf;
-        }
-        public static string Type2String(QueryType type)
-        {
-            switch (type)
-            {
-                case QueryType.Cylinders:
-                    return "cylinders";
-                case QueryType.Modelyear:
-                    return "modelyear";
-                case QueryType.Origin:
-                    return "origin";
-                case QueryType.Mpg :
-                    return "mpg";
-                case QueryType.Displacement:
-                    return "displacement";
-                case QueryType.Horsepower:
-                    return "horsepower";
-                case QueryType.Weight:
-                    return "weight";
-                case QueryType.Acceleration:
-                    return "acceleration";
-                case QueryType.Brand:
-                    return "brand";
-                case QueryType.Model:
-                    return "model";
-                case QueryType.Type:
-                    return "type";
-                default:
-                    return null;
+                    scores[id].Item1 += idf * qf;
             }
         }
     }
