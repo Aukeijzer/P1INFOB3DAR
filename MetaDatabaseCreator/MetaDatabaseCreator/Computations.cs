@@ -24,11 +24,8 @@ namespace MetaDatabaseCreator
             return Math.Log(tuples / frequency);
         }
 
-        public double IDFNumerical(double tuples, double value, List<double> AttributeValues)
+        public double IDFNumerical(double tuples, double value, List<double> AttributeValues, double bandwidth)
         {
-            double standardDev = StandardDeviation(AttributeValues);
-            double bandwidth = CalculateBandwidth(standardDev, tuples);
-
             double denominator = 0;
             foreach(double values in AttributeValues)
             {
@@ -38,7 +35,7 @@ namespace MetaDatabaseCreator
             return Math.Log(tuples / denominator);
         }
 
-        public static double StandardDeviation(List<double> values)
+        public double StandardDeviation(List<double> values)
         {
             double average = values.Average();
             return Math.Sqrt(values.Average(x => Math.Pow(x - average, 2)));
@@ -46,7 +43,7 @@ namespace MetaDatabaseCreator
 
         public double CalculateBandwidth(double StandardDeviation, double valueTotal)
         {
-            return 1.06 * StandardDeviation * Math.Pow(valueTotal, -1 / 5);
+            return 1.06 * StandardDeviation * Math.Pow(valueTotal, -0.2);
         }
 
         /// <summary>

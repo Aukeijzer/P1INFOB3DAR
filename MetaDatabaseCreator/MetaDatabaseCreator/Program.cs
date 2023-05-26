@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.Data.Common;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace MetaDatabaseCreator
 {
@@ -377,6 +378,7 @@ namespace MetaDatabaseCreator
                     {
                         IDF = FormatDouble(Comp.IDFCategorical(totalTuples, data.TermFrequency));
                         string set = CreateSimilaritySetString(data);
+
                         string key;
                         if (int.TryParse(tuple.Key, out int i))
                             key = tuple.Key;
@@ -387,10 +389,16 @@ namespace MetaDatabaseCreator
                     }
                     else
                     {
-                        IDF = FormatDouble(Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues));
+                        double standardDev = Comp.StandardDeviation(attributeValues);
+                        double bandwidth = Comp.CalculateBandwidth(standardDev, totalTuples);
+
+                        IDF = FormatDouble(Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues, bandwidth));
+
+                        string h = bandwidth.ToString();
+
                         string key = FormatDouble(double.Parse(tuple.Key));
-                        insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3});",
-                            name, key, IDF, QF);
+                        insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3}, {4});",
+                            name, key, IDF, QF, h);
                     }
 
 
