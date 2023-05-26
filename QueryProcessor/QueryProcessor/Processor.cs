@@ -13,6 +13,7 @@ namespace QueryProcessor
         private SQLiteConnection main_dbConnection;
         private SQLiteConnection meta_dbConnection;
         private (double, int)[] scores;
+        private int n;
         /// <summary>
         /// Initializes db connection strings
         /// </summary>
@@ -24,18 +25,17 @@ namespace QueryProcessor
             string metaConnectionString = $"Data Source={root}CarsMeta.sqlite;Version=3;";
             meta_dbConnection = new SQLiteConnection(metaConnectionString);
             
-            main_dbConnection.Open();
-            Console.WriteLine(lookupID(2));
-            meta_dbConnection.Close();
         }
         public List<string> FindTopK(List<Predicate> predicates, int k)
         {
-            int n = 3; //TODO: CHANGE THIS
-            scores = new (double, int)[n];
-
             main_dbConnection.Open();
             meta_dbConnection.Open();
             
+            n = (int) calcN();
+            scores = new (double, int)[n];
+            for(int i = 0;i<n;i++)
+                scores[i] = (0, i+1);
+
             //For each predicate in the list of predicates update the scores
             foreach (var predicate in predicates)
             {
@@ -47,9 +47,6 @@ namespace QueryProcessor
                     UpdateCategoricalScores(predicate);
             }
             //For each attribute not in the list of predicates update the scores
-
-            main_dbConnection.Close();
-            meta_dbConnection.Close();
             
             //Sort scores ascending
             Array.Sort(scores);
@@ -58,6 +55,10 @@ namespace QueryProcessor
             List<String> result = new List<string>();
             for(int i = 0; i < k; i++)
                 result.Add(lookupID(scores[scores.Length-1-i].Item2));
+            
+            main_dbConnection.Close();
+            meta_dbConnection.Close();
+            
             return result;
         }
 
@@ -78,7 +79,6 @@ namespace QueryProcessor
         {
             string type = Type2String(predicate.Query);
             double value = double.Parse(predicate.Value);
-            int n = 3; //TODO: change this
             
             string sql = $"SELECT {type} FROM autompg";
             SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
@@ -98,10 +98,18 @@ namespace QueryProcessor
             return Math.Pow(Math.E, exponent);
         }
 
+        private long calcN()
+        {
+            string sql = $"SELECT COUNT(*) FROM autompg";
+            SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
+            SQLiteDataReader reader = command.ExecuteReader();
+            bool test = reader.Read();
+            return (long)reader[0];
+        }
         public double lookUpH(Predicate predicate)
         {
-            string sql = $"SELECT h FROM autompg where h = {predicate.Value}";
-            SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
+            string sql = $"SELECT h FROM numerical_metadata where value = {predicate.Value}";
+            SQLiteCommand command = new SQLiteCommand(sql, meta_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
             reader.Read();
             return (double)reader["h"];
@@ -110,7 +118,7 @@ namespace QueryProcessor
         private void UpdateNumericalScores(Predicate predicate)
         {
             string type = Type2String(predicate.Query);
-            double h = 1; //TODO: change this
+            double h = lookUpH(predicate);
             double idf = CalcIdf(predicate,h);
             double value = double.Parse(predicate.Value);
             
@@ -128,16 +136,19 @@ namespace QueryProcessor
 
         private (double,double) lookUpIdfQf(Predicate predicate)
         {
-            string sql = $"SELECT (idf,qf) FROM autompg " +
-                         $"WHERE attribute = {Type2String(predicate.Query)} " +
-                         $"AND value = {predicate.Value}";
+            string sql = $"SELECT idf,qf FROM categorical_metadata " +
+                         $"WHERE attribute = \"{Type2String(predicate.Query)}\" " +
+                         $"AND value = \"{predicate.Value}\"";
             SQLiteCommand command = new SQLiteCommand(sql, meta_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
-            reader.Read();
-            double idf = (double)reader["idf"];
-            double qf = (double)reader["qf"];
+            if (reader.Read())
+            {
+                double idf = (double)reader["idf"];
+                double qf = (double)reader["qf"];
+                return (idf, qf);
+            }
+            else return (0, 0);
             
-            return (idf,qf);
         }
         private void UpdateCategoricalScores(Predicate predicate)
         {
@@ -145,16 +156,17 @@ namespace QueryProcessor
             (double idf, double qf) = lookUpIdfQf(predicate);
             string value = predicate.Value;
             
-            string sql = "SELECT * FROM autompg ORDER BY id";
+            string sql = $"SELECT id,{type} FROM autompg";
             SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
             
             for (int i = 0; i < scores.Length; i++)
             {
                 reader.Read();
-                string entry = (string)reader[type];
+                string entry = reader[type].ToString();
+                long id = (long)reader["id"];
                 if (entry == value)
-                    scores[i].Item1 += idf * qf;
+                    scores[id-1].Item1 += idf * qf;
             }
         }
         private double calculateSimilarity(string query, string entry, double idf, double qf)

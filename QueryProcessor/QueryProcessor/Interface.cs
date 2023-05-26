@@ -13,7 +13,7 @@ namespace QueryProcessor
             {
                 Console.WriteLine("Enter a query:");
                 string query = Console.ReadLine();
-                (bool valid, var predicates, int k) = ProcessQuery(query);
+                (bool valid, var predicates, int k) = ParseQuery(query);
                 if (query == "exit")
                     running = false;
                 else if (valid)
@@ -29,7 +29,7 @@ namespace QueryProcessor
             Console.WriteLine("Exiting...");
         }
         
-        private static (bool,List<Predicate>,int) ProcessQuery(string query)
+        private static (bool,List<Predicate>,int) ParseQuery(string query)
         {
             //checking if semicolon is present
             if (query.Length>0 && query[query.Length-1]==';')
@@ -39,6 +39,7 @@ namespace QueryProcessor
             //splitting query into tokens
             string[] tokens = query.ToLower().Split(',');
             int k = 10;
+            var queries = new List<QueryType>();
             List<Predicate> predicates = new List<Predicate>();
             
             //parsing tokens into predicates
@@ -49,9 +50,16 @@ namespace QueryProcessor
                     return default;
                 
                 Predicate predicate = MkPredicate(expression[0].Trim(), expression[1].Trim());
+
+                //invalid attribute
                 if (predicate.Query == QueryType.Invalid)
                     return default;
                 
+                //duplicate attribute
+                if (queries.Contains(predicate.Query))
+                    return default;
+                queries.Add(predicate.Query);
+
                 if (predicate.Query == QueryType.Kvalue)
                     k = int.Parse(predicate.Value);
                 else
@@ -72,7 +80,10 @@ namespace QueryProcessor
                 return new Predicate(type, s2);
             //text
             if (type <= QueryType.Type && type > QueryType.Acceleration)
-                return new Predicate(type, s2);
+            {
+                if (s2.StartsWith("\"") && s2.EndsWith("\""))
+                    return new Predicate(type, s2.Substring(1, s2.Length - 2));
+            }
             
             //invalid type
             return invalidPredicate;
