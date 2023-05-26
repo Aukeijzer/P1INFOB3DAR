@@ -1,6 +1,4 @@
-﻿using QueryProcessor.Properties;
-
-namespace QueryProcessor
+﻿namespace QueryProcessor
 {
     internal class Program
     {

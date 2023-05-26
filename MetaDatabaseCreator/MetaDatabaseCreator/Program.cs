@@ -48,39 +48,83 @@ namespace MetaDatabaseCreator
 
         static Computations Comp = new Computations();
         static int totalTuples = 0;
-
+        private static string root = "..//..//..//..//";
         static void Main(string[] args)
         {
-            //Create database file for autompg
-            SQLiteConnection.CreateFile("Cars.sqlite");
-
-            string connectionString = "Data Source=Cars.sqlite;Version=3;";
-            SQLiteConnection m_dbConnection = new SQLiteConnection(connectionString);
-
-            m_dbConnection.Open();
-
-            //Create database and read data for dictionaries, mainly TF
-            CreateDatabase(m_dbConnection);
-            ReadDatabase(m_dbConnection);
-
-            m_dbConnection.Close();
+            //Create main database and fill dictionaries based on main database
+            FillAndReadMainDB();
 
             //Fill dictionaries with more data regarding RQF and similarity sets
             ReadWorkload();
 
             //Create all INSERT statements for workload.txt
             InsertAllDictionaries();
-
+            
+            //Create meta database
+            CreateMetaDB();
+            
             Console.WriteLine("Preprocessing finished!");
             Console.ReadKey();
         }
 
         #region Data Reading Methods
-
-        private static void CreateDatabase(SQLiteConnection m_dbConnection)
+        private static void FillAndReadMainDB()
         {
-            string sql = File.ReadAllText("..\\..\\Database\\autompg.sql");
-            SQLiteCommand command = new SQLiteCommand(sql, m_dbConnection);
+            string connectionString = $"Data Source={root}Cars.sqlite;Version=3;";
+            SQLiteConnection m_dbConnection = new SQLiteConnection(connectionString);
+            
+            //Create database file for autompg
+            if (!File.Exists($"{root}Cars.sqlite"))
+            {
+                Console.WriteLine("Creating Main Database...");
+                SQLiteConnection.CreateFile($"{root}Cars.sqlite");
+                
+                m_dbConnection.Open();
+                ExecuteNonQuery(m_dbConnection, $"{root}autompg.sql");
+            }
+            else
+            {
+                Console.WriteLine("Main Database already exists");
+                m_dbConnection.Open();
+            }   
+
+            //read data for dictionaries, mainly TF
+            DebugReadDatabase(m_dbConnection);
+            ReadDatabase(m_dbConnection);
+
+            m_dbConnection.Close();
+        }
+
+        private static void CreateMetaDB()
+        {
+ 
+            
+            string connectionString = $"Data Source={root}CarsMeta.sqlite;Version=3;";
+            SQLiteConnection meta_dbConnection = new SQLiteConnection(connectionString);
+            
+            if (!File.Exists($"{root}CarsMeta.sqlite"))
+            {
+                Console.WriteLine("Creating Meta Database...");
+
+                //Create metadatabase file
+                SQLiteConnection.CreateFile($"{root}CarsMeta.sqlite");
+                meta_dbConnection.Open();
+
+                ExecuteNonQuery(meta_dbConnection, $"{root}metadb.txt");
+                ExecuteNonQuery(meta_dbConnection, $"{root}metaload.txt");
+                
+                meta_dbConnection.Close();
+            }
+            else
+            {
+                Console.WriteLine("Meta Database already exists");
+            }
+            
+        }
+        private static void ExecuteNonQuery(SQLiteConnection dbConnection, string filePath)
+        {
+            string sql = File.ReadAllText(filePath);
+            SQLiteCommand command = new SQLiteCommand(sql, dbConnection);
             command.ExecuteNonQuery();
         }
 
@@ -113,7 +157,7 @@ namespace MetaDatabaseCreator
         /// </summary>
         private static void ReadWorkload()
         {
-            string file = "..\\..\\Database\\workload.txt";
+            string file = $"{root}workload.txt";
 
             IEnumerable<string> lines = File.ReadLines(file);
 
@@ -229,8 +273,6 @@ namespace MetaDatabaseCreator
                 case "type":
                     FillDictionaryRQF(type, value, qf);
                     break;
-                default:
-                    break;
             }
         }
 
@@ -271,7 +313,7 @@ namespace MetaDatabaseCreator
         /// </summary>
         private static void InsertAllDictionaries()
         {
-            string filePath = "..\\..\\Database\\metaload.txt";
+            string filePath = $"{root}metaload.txt";
             try
             {
                 File.Delete(filePath);
@@ -314,38 +356,50 @@ namespace MetaDatabaseCreator
                         attributeValues.Add(Double.Parse(tuple.Key));
                 }
             }
-
+            
             int RQFMax = RQFList.Max();
-            string filePath = "..\\..\\Database\\metaload.txt";
-
+            string filePath = $"{root}metaload.txt";
+            
             using (StreamWriter writer = new StreamWriter(filePath, true))
             {
                 foreach (KeyValuePair<string, TableTuple> tuple in attribute)
                 {
                     TableTuple data = tuple.Value;
-                    double IDF = 0;
-                    double QF = Comp.QF(data.RawQueryFrequency, RQFMax);
-                    string insert = "";
+                    string IDF;
+                    string QF = FormatDouble(Comp.QF(data.RawQueryFrequency, RQFMax));
+                    string insert;
 
                     if (categorical)
                     {
-                        IDF = Comp.IDFCategorical(totalTuples, data.TermFrequency);
+                        IDF = FormatDouble(Comp.IDFCategorical(totalTuples, data.TermFrequency));
                         string set = CreateSimilaritySetString(data);
-
-                        insert = string.Format("INSERT INTO categorical_metadata VALUES ('{0}', {1}, {2}, {3}, "
-                            + set + ")", name, tuple.Key, IDF, QF);
+                        string key;
+                        if (int.TryParse(tuple.Key, out int i))
+                            key = tuple.Key;
+                        else
+                            key = $"\"{tuple.Key}\"";
+                        insert = string.Format("INSERT INTO categorical_metadata VALUES ('{0}', {1}, {2}, {3}, {4});", 
+                            name, key, IDF, QF, set);
                     }
                     else
                     {
-                        IDF = Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues);
-
-                        insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3})", name, tuple.Key, IDF, QF);
+                        IDF = FormatDouble(Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues));
+                        string key = FormatDouble(double.Parse(tuple.Key));
+                        insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3});",
+                            name, key, IDF, QF);
                     }
 
 
                     writer.WriteLine(insert);
                 }
             }
+        }
+
+        private static string FormatDouble(double value)
+        {
+            if (double.IsNaN(value))
+                return "NULL";
+            return value.ToString(System.Globalization.CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -355,7 +409,7 @@ namespace MetaDatabaseCreator
         /// <returns></returns>
         private static string CreateSimilaritySetString(TableTuple data)
         {
-            string set = "(";
+            string set = "\"(";
             for (int i = 0; i < data.SimilaritySet.Count; i++)
             {
                 // do something with each item
@@ -368,7 +422,7 @@ namespace MetaDatabaseCreator
                     set += i + ", ";
                 }
             }
-            set += ")";
+            set += ")\"";
             return set;
         }
 

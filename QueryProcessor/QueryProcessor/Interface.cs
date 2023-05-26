@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
-namespace QueryProcessor.Properties
+namespace QueryProcessor
 {
     public static class Interface
     {
         public static void Run()
         {
+            Processor processor = new Processor();
             bool running = true;
             while (running)
             {
@@ -18,7 +18,9 @@ namespace QueryProcessor.Properties
                     running = false;
                 else if (valid)
                 {
-                    Console.WriteLine("correct");
+                    var result = processor.FindTopK(predicates, k);
+                    foreach (string s in result)
+                        Console.WriteLine(s);
                 }
                 else
                     Console.WriteLine("Invalid query");
@@ -51,7 +53,7 @@ namespace QueryProcessor.Properties
                     return default;
                 
                 if (predicate.Query == QueryType.Kvalue)
-                    k = int.Parse(predicate.value);
+                    k = int.Parse(predicate.Value);
                 else
                     predicates.Add(predicate);
             }
@@ -66,10 +68,10 @@ namespace QueryProcessor.Properties
             if (type <= QueryType.Origin && int.TryParse(s2, out int i))
                     return new Predicate(type, s2);
             //real
-            if(type<=QueryType.Acceleration && double.TryParse(s2, out double d))
-                    return new Predicate(type, s2);
+            if (type <= QueryType.Acceleration && type > QueryType.Origin && double.TryParse(s2, out double d))
+                return new Predicate(type, s2);
             //text
-            if(type<=QueryType.Type)
+            if (type <= QueryType.Type && type > QueryType.Acceleration)
                 return new Predicate(type, s2);
             
             //invalid type
@@ -107,16 +109,18 @@ namespace QueryProcessor.Properties
 
             return QueryType.Invalid;
         }
+
+
     }
     public struct Predicate
     {
         public Predicate(QueryType query, string value)
         {
             this.Query = query;
-            this.value = value;
+            this.Value = value;
         }
         public QueryType Query;
-        public string value;
+        public string Value;
     }
     public enum QueryType
     {
@@ -137,5 +141,6 @@ namespace QueryProcessor.Properties
         Type,
         //misc
         Invalid
+        
     }
 }

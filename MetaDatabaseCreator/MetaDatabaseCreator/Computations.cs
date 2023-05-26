@@ -8,7 +8,7 @@ namespace MetaDatabaseCreator
 {
     /// <summary>
     /// Class that performs computations for the metadatabase
-    /// Computes certain values such as IDF, QF and Jacquard Coefficient
+    /// Computes certain values such as IDF, QF and Jaccard Coefficient
     /// </summary>
     public class Computations
     {
@@ -61,12 +61,12 @@ namespace MetaDatabaseCreator
         }
 
         /// <summary>
-        /// Calculates Jacquard Coefficient
+        /// Calculates Jaccard Coefficient
         /// </summary>
         /// <param name="value1"></param>
         /// <param name="value2"></param>
         /// <returns></returns>
-        public float Jacquard(List<string> value1, List<string> value2)
+        public float Jaccard(List<string> value1, List<string> value2)
         {
             List<string> queryUnion = (List<string>)value1.Union(value2);
             List<string> queryIntersect = (List<string>)value1.Intersect(value2);

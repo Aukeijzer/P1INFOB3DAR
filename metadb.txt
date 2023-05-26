@@ -6,7 +6,7 @@ CREATE TABLE categorical_metadata (
     value VARCHAR(255),
     idf REAL,
     qf REAL,
-    similarity VARCHAR(255)
+    similarity VARCHAR(255),
     PRIMARY KEY (attribute, value)
 );
 
