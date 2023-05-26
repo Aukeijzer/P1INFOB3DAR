@@ -15,5 +15,6 @@ CREATE TABLE numerical_metadata (
     value real,
     idf REAL,
     qf REAL,
+    h REAL,
     PRIMARY KEY (attribute, value)
 );

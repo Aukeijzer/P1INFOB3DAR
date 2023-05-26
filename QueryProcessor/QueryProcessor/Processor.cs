@@ -97,11 +97,16 @@ namespace QueryProcessor
             double exponent = -0.5 * Math.Pow((value - mean) / h, 2);
             return Math.Pow(Math.E, exponent);
         }
-        public bool IsNumerical(QueryType query)
+
+        public double lookUpH(Predicate predicate)
         {
-            return QueryType.Origin < query && query < QueryType.Brand;
+            string sql = $"SELECT h FROM autompg where h = {predicate.Value}";
+            SQLiteCommand command = new SQLiteCommand(sql, main_dbConnection);
+            SQLiteDataReader reader = command.ExecuteReader();
+            reader.Read();
+            return (double)reader["h"];
         }
-        
+
         private void UpdateNumericalScores(Predicate predicate)
         {
             string type = Type2String(predicate.Query);

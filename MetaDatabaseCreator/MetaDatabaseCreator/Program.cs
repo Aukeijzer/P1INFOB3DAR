@@ -90,7 +90,6 @@ namespace MetaDatabaseCreator
             }   
 
             //read data for dictionaries, mainly TF
-            DebugReadDatabase(m_dbConnection);
             ReadDatabase(m_dbConnection);
 
             m_dbConnection.Close();
@@ -394,7 +393,7 @@ namespace MetaDatabaseCreator
 
                         IDF = FormatDouble(Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues, bandwidth));
 
-                        string h = bandwidth.ToString();
+                        string h = FormatDouble(bandwidth);
 
                         string key = FormatDouble(double.Parse(tuple.Key));
                         insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3}, {4});",
