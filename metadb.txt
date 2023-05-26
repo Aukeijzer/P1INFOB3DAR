@@ -12,8 +12,7 @@ CREATE TABLE categorical_metadata (
 
 CREATE TABLE numerical_metadata (
     attribute VARCHAR(255),
-    value real,
-    idf REAL,
+    value REAL,
     qf REAL,
     h REAL,
     PRIMARY KEY (attribute, value)

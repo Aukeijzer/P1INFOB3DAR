@@ -1,9 +1,7 @@
 {
   "ExpandedNodes": [
-    "",
-    "\\MetaDatabaseCreator",
-    "\\MetaDatabaseCreator\\MetaDatabaseCreator"
+    ""
   ],
-  "SelectedNode": "\\MetaDatabaseCreator\\MetaDatabaseCreator\\Computations.cs",
+  "SelectedNode": "\\QueryProcessor.sln",
   "PreviewInSolutionExplorer": false
 }
