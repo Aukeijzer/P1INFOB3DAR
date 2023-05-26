@@ -353,11 +353,13 @@ namespace MetaDatabaseCreator
             
             foreach(KeyValuePair<string, TableTuple> tuple in attribute)
             {
-                for(int i = 0; i < tuple.Value.TermFrequency; i++)
-                {
-                    RQFList.Add(tuple.Value.RawQueryFrequency);
-                    if(!categorical)
+                RQFList.Add(tuple.Value.RawQueryFrequency);
+                if(!categorical)
+                { 
+                    for (int i = 0; i < tuple.Value.TermFrequency; i++)
+                    {
                         attributeValues.Add(Double.Parse(tuple.Key));
+                    }
                 }
             }
             
@@ -391,13 +393,11 @@ namespace MetaDatabaseCreator
                         double standardDev = Comp.StandardDeviation(attributeValues);
                         double bandwidth = Comp.CalculateBandwidth(standardDev, totalTuples);
 
-                        IDF = FormatDouble(Comp.IDFNumerical(totalTuples, Double.Parse(tuple.Key), attributeValues, bandwidth));
-
                         string h = FormatDouble(bandwidth);
 
                         string key = FormatDouble(double.Parse(tuple.Key));
-                        insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3}, {4});",
-                            name, key, IDF, QF, h);
+                        insert = string.Format("INSERT INTO numerical_metadata VALUES ('{0}', {1}, {2}, {3});",
+                            name, key, QF, h);
                     }
 
 
