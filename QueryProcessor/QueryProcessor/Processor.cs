@@ -32,9 +32,14 @@ namespace QueryProcessor
             meta_dbConnection.Open();
             
             n = (int) calcN();
-            scores = new (double, int)[n + 10];
+            scores = new (double, int)[n + 2];
             for(int i = 0;i<scores.Length;i++)
                 scores[i] = (0, i);
+            
+            //ID's not in db
+            scores[0] = (double.MinValue, 0);
+            scores[359] = (double.MinValue, 359);
+            
             List<QueryType> queries = new List<QueryType>();
             //For each predicate in the list of predicates update the scores
             foreach (var predicate in predicates)
@@ -99,7 +104,8 @@ namespace QueryProcessor
                 SQLiteDataReader reader2 = command2.ExecuteReader();
                 reader2.Read();
                 double qf = (double) reader2["qf"];
-                scores[id].Item1 += Math.Log(qf);
+                if(qf!=0)
+                    scores[id].Item1 += Math.Log(qf)/1000;
             }
         }
 
