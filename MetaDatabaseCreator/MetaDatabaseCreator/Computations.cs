@@ -51,12 +51,18 @@ namespace MetaDatabaseCreator
 
         /// <summary>
         /// Calculates QF
+        /// If RQFMAX is 0, then return 0
+        /// It means that the value has never been queried in the workload
         /// </summary>
         /// <param name="rqfValue"></param>
         /// <param name="rqfMax"></param>
         /// <returns></returns>
         public double QF(double rqfValue, double rqfMax)
         {
+            if (rqfMax == 0) 
+            { 
+                return 0; 
+            }
             return rqfValue / rqfMax;
         }
 

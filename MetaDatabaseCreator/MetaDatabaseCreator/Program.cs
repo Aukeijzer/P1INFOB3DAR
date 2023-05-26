@@ -180,7 +180,7 @@ namespace MetaDatabaseCreator
                 {
                     if (subquery.Contains(" IN "))
                     {
-                        AddToSimilarity(workloadID, subquery);
+                        AddToQFAndSimilarity(workloadID, subquery, qf);
                     }
                     else
                     {
@@ -281,7 +281,7 @@ namespace MetaDatabaseCreator
         /// </summary>
         /// <param name="workloadID"></param>
         /// <param name="query"></param>
-        private static void AddToSimilarity(int workloadID, string query)
+        private static void AddToQFAndSimilarity(int workloadID, string query, int qf)
         {   
             int index = query.IndexOf("IN");
             string[] subqueries = query.Substring(index + 4).Split(')')[0].Split(',');
@@ -290,14 +290,18 @@ namespace MetaDatabaseCreator
             {
                 foreach (string brandQuery in subqueries)
                 {
-                    brand[brandQuery.Trim('\'')].AddToSet(workloadID);
+                    string value = brandQuery.Trim('\'');
+                    brand[value].AddToSet(workloadID);
+                    FillDictionaryRQF(brand, value, qf);
                 }
             }
             else if(query.Contains("type"))
             {
                 foreach (string typeQuery in subqueries)
                 {
-                    type[typeQuery.Trim('\'')].AddToSet(workloadID);
+                    string value = typeQuery.Trim('\'');
+                    type[value].AddToSet(workloadID);
+                    FillDictionaryRQF(type, value, qf);
                 }
             }
             

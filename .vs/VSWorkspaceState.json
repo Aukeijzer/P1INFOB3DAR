@@ -1,7 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\MetaDatabaseCreator",
+    "\\MetaDatabaseCreator\\MetaDatabaseCreator"
   ],
-  "SelectedNode": "\\C:\\Users\\Mikey\\Documents\\UniDocs\\DataAnalyse\\DARP1",
+  "SelectedNode": "\\MetaDatabaseCreator\\MetaDatabaseCreator\\Computations.cs",
   "PreviewInSolutionExplorer": false
 }
